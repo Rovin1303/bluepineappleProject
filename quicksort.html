@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Sort Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .array-element {
+            padding: 10px;
+            border: 2px solid black;
+            width: 40px;
+            text-align: center;
+            font-size: 24px;
+            background-color: lightgray;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+        .sorted {
+            background-color: red !important;
+            border-color: darkred !important;
+            color: white;
+        }
+        .swapping {
+            background-color: purple !important;
+            border: 3px solid darkviolet !important;
+            color: white;
+        }
+        .pivot {
+            background-color: orange !important;
+            border: 3px solid darkorange !important;
+        }
+        pre{
+            text-align: left;
+            margin-left: 260px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Quick Sort Visualization</h2>
+    <button onclick="prevStep()">Previous Step</button>
+    <button onclick="nextStep()">Next Step</button>
+    <button onclick="autoSort()">Auto Sort</button>
+    <button onclick="resetArray()">Reset</button>
+    <div class="array-container" id="arrayDisplay"></div>
+    
+    <h3>Quick Sort Code</h3>
+    <pre>
+function quickSort(arr, low = 0, high = arr.length - 1) {
+    if (low >= high) return;
+    let pivotIndex = partition(arr, low, high);
+    quickSort(arr, low, pivotIndex - 1);
+    quickSort(arr, pivotIndex + 1, high);
+}
+
+function partition(arr, low, high) {
+    let pivot = arr[high];
+    let i = low - 1;
+    for (let j = low; j < high; j++) {
+        if (arr[j] < pivot) {
+            i++;
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    }
+    [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+    return i + 1;
+}
+</pre>
+    
+    <script>
+        let originalArray = [12, 9, 7, 15, 10, 5, 3, 20, 8, 1, 6, 14];
+        let steps = [];
+        let stepIndex = 0;
+        let autoSorting = false;
+
+        function displayArray(step) {
+            const container = document.getElementById("arrayDisplay");
+            container.innerHTML = "";
+            step.forEach(({ value, state }) => {
+                const element = document.createElement("div");
+                element.classList.add("array-element");
+                element.textContent = value;
+                if (state) {
+                    element.classList.add(state);
+                }
+                container.appendChild(element);
+            });
+        }
+
+        function quickSort(arr, low = 0, high = arr.length - 1) {
+            if (low >= high) return;
+            let pivotIndex = partition(arr, low, high);
+            quickSort(arr, low, pivotIndex - 1);
+            quickSort(arr, pivotIndex + 1, high);
+        }
+
+        function partition(arr, low, high) {
+            let pivot = arr[high];
+            let i = low - 1;
+            steps.push(arr.map((value, index) => ({ value, state: index === high ? "pivot" : "" })));
+            for (let j = low; j < high; j++) {
+                if (arr[j] < pivot) {
+                    i++;
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    steps.push(arr.map((value, index) => ({ value, state: index === i || index === j ? "swapping" : "" })));
+                }
+            }
+            [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+            steps.push(arr.map((value, index) => ({ value, state: index === i + 1 || index === high ? "swapping" : "" })));
+            return i + 1;
+        }
+
+        function generateSteps() {
+            steps = [];
+            let tempArray = [...originalArray];
+            quickSort(tempArray);
+            steps.push(tempArray.map((value) => ({ value, state: "sorted" })));
+        }
+
+        function nextStep() {
+            if (stepIndex < steps.length - 1) {
+                stepIndex++;
+                displayArray(steps[stepIndex]);
+            }
+        }
+
+        function prevStep() {
+            if (stepIndex > 0) {
+                stepIndex--;
+                displayArray(steps[stepIndex]);
+            }
+        }
+
+        function resetArray() {
+            stepIndex = 0;
+            autoSorting = false;
+            generateSteps();
+            displayArray(steps[stepIndex]);
+        }
+
+        function autoSort() {
+            autoSorting = true;
+            function stepThrough() {
+                if (stepIndex < steps.length - 1 && autoSorting) {
+                    nextStep();
+                    setTimeout(stepThrough, 500);
+                }
+            }
+            stepThrough();
+        }
+
+        generateSteps();
+        displayArray(steps[stepIndex]);
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Sort Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .array-element {
+            padding: 10px;
+            border: 2px solid black;
+            width: 40px;
+            text-align: center;
+            font-size: 24px;
+            background-color: lightgray;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+        .sorted {
+            background-color: red !important;
+            border-color: darkred !important;
+            color: white;
+        }
+        .dividing {
+            background-color: yellow !important;
+            border: 3px dashed orange !important;
+        }
+        .merging {
+            background-color: lightblue !important;
+            border: 3px solid blue !important;
+        }
+        .comparing {
+            background-color: purple !important;
+            border: 3px solid darkviolet !important;
+            color: white;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h2>Merge Sort Visualization</h2>
+    <button onclick="prevStep()">Previous Step</button>
+    <button onclick="nextStep()">Next Step</button>
+    <button onclick="autoSort()">Auto Sort</button>
+    <button onclick="resetArray()">Reset</button>
+    <div class="array-container" id="arrayDisplay"></div>
+
+    <h3>Merge Sort Code in C++</h3>
+    <pre>
+#include <iostream>
+using namespace std;
+
+void merge(int arr[], int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+    int L[n1], R[n2];
+    
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[mid + 1 + j];
+    
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j])
+            arr[k++] = L[i++];
+        else
+            arr[k++] = R[j++];
+    }
+    while (i < n1)
+        arr[k++] = L[i++];
+    while (j < n2)
+        arr[k++] = R[j++];
+}
+
+void mergeSort(int arr[], int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSort(arr, left, mid);
+        mergeSort(arr, mid + 1, right);
+        merge(arr, left, mid, right);
+    }
+}
+
+int main() {
+    int arr[] = {12, 9, 7, 15, 10, 5, 3, 20, 8, 1, 6, 14};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    mergeSort(arr, 0, n - 1);
+    cout << "Sorted array: ";
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
+    return 0;
+}
+    </pre>
+
+    <script>
+        let originalArray = [12, 9, 7, 15, 10, 5, 3, 20, 8, 1, 6, 14];
+        let steps = [];
+        let stepIndex = 0;
+        let autoSorting = false;
+
+        function displayArray(step) {
+            const container = document.getElementById("arrayDisplay");
+            container.innerHTML = "";
+            step.forEach(({ value, state }) => {
+                const element = document.createElement("div");
+                element.classList.add("array-element");
+                element.textContent = value;
+                if (state) {
+                    element.classList.add(state);
+                }
+                container.appendChild(element);
+            });
+        }
+
+        function mergeSort(arr, left = 0, right = arr.length - 1) {
+            if (left >= right) return;
+            let mid = Math.floor((left + right) / 2);
+            
+            steps.push(arr.map((value, index) => ({
+                value,
+                state: index >= left && index <= right ? "dividing" : ""
+            })));
+            
+            mergeSort(arr, left, mid);
+            mergeSort(arr, mid + 1, right);
+            merge(arr, left, mid, right);
+        }
+
+        function merge(arr, left, mid, right) {
+            let temp = arr.slice(left, right + 1);
+            let sortedTemp = [...temp].sort((a, b) => a - b);
+            
+            for (let i = left; i <= right; i++) {
+                steps.push(arr.map((value, index) => ({
+                    value,
+                    state: index === i ? "comparing" : ""
+                })));
+                arr[i] = sortedTemp[i - left];
+                steps.push(arr.map((value, index) => ({
+                    value,
+                    state: index >= left && index <= right ? "merging" : ""
+                })));
+            }
+            if (right - left + 1 === originalArray.length) {
+                steps.push(arr.map((value) => ({ value, state: "sorted" })));
+            }
+        }
+
+        function generateSteps() {
+            steps = [];
+            let tempArray = [...originalArray];
+            mergeSort(tempArray);
+            steps.push(tempArray.map((value) => ({ value, state: "sorted" })));
+        }
+
+        function nextStep() {
+            if (stepIndex < steps.length - 1) {
+                stepIndex++;
+                displayArray(steps[stepIndex]);
+            }
+        }
+
+        function prevStep() {
+            if (stepIndex > 0) {
+                stepIndex--;
+                displayArray(steps[stepIndex]);
+            }
+        }
+
+        function resetArray() {
+            stepIndex = 0;
+            autoSorting = false;
+            generateSteps();
+            displayArray(steps[stepIndex]);
+        }
+
+        function autoSort() {
+            autoSorting = true;
+            function stepThrough() {
+                if (stepIndex < steps.length - 1 && autoSorting) {
+                    nextStep();
+                    setTimeout(stepThrough, 500);
+                }
+            }
+            stepThrough();
+        }
+
+        generateSteps();
+        displayArray(steps[stepIndex]);
+    </script>
+</body>
+</html>

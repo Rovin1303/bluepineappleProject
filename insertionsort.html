@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insertion Sort Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .array-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .array-element {
+            padding: 10px;
+            border: 2px solid black;
+            width: 40px;
+            text-align: center;
+            font-size: 24px;
+            background-color: lightgray;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .sorted {
+            background-color: green !important;
+            border-color: darkgreen !important;
+            color: white;
+        }
+        .comparing {
+            background-color: blue !important;
+            color: white;
+        }
+        .shifting {
+            background-color: orange !important;
+            color: white;
+        }
+        .debugger {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        pre {
+            text-align: left;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h2>Insertion Sort Visualization</h2>
+    <button onclick="prevStep()">Previous Step</button>
+    <button onclick="nextStep()">Next Step</button>
+    <button onclick="autoSort()">Auto Sort</button>
+    <button onclick="resetArray()">Reset</button>
+    <div class="array-container" id="arrayDisplay"></div>
+    
+    <div class="debugger">
+        <h3>Debugger</h3>
+        <pre id="codeDisplay">
+void insertionSort(int arr[], int n) {
+    for (int i = 1; i < n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+        }
+        arr[j + 1] = key;
+    }
+}
+        </pre>
+    </div>
+    
+    <script>
+        let originalArray = [5, 3, 8, 1, 2];
+        let array = [...originalArray];
+        let steps = [];
+        let highlights = [];
+        let stepIndex = 0;
+        let autoSorting = false;
+        
+        function displayArray(arr, highlightIndex = -1, highlightType = "") {
+            const container = document.getElementById("arrayDisplay");
+            container.innerHTML = "";
+            arr.forEach((value, index) => {
+                const element = document.createElement("div");
+                element.classList.add("array-element");
+                element.textContent = value;
+                
+                if (highlightIndex === index) {
+                    element.classList.add(highlightType);
+                }
+                if (stepIndex === steps.length - 1) {
+                    element.classList.add("sorted");
+                }
+                container.appendChild(element);
+            });
+        }
+        
+        function generateSteps() {
+            steps = [];
+            highlights = [];
+            let tempArray = [...originalArray];
+            for (let i = 1; i < tempArray.length; i++) {
+                let key = tempArray[i];
+                let j = i - 1;
+                steps.push([...tempArray]);
+                highlights.push([i, "comparing"]);
+                
+                while (j >= 0 && tempArray[j] > key) {
+                    tempArray[j + 1] = tempArray[j];
+                    steps.push([...tempArray]);
+                    highlights.push([j + 1, "shifting"]);
+                    j = j - 1;
+                }
+                tempArray[j + 1] = key;
+                steps.push([...tempArray]);
+                highlights.push([j + 1, "sorted"]);
+            }
+            steps.push([...tempArray]);
+            highlights.push([-1, ""]);
+        }
+        
+        function nextStep() {
+            if (stepIndex < steps.length - 1) {
+                stepIndex++;
+                let [highlightIndex, highlightType] = highlights[stepIndex];
+                displayArray(steps[stepIndex], highlightIndex, highlightType);
+            }
+        }
+        
+        function prevStep() {
+            if (stepIndex > 0) {
+                stepIndex--;
+                let [highlightIndex, highlightType] = highlights[stepIndex];
+                displayArray(steps[stepIndex], highlightIndex, highlightType);
+            }
+        }
+        
+        function autoSort() {
+            if (autoSorting) return;
+            autoSorting = true;
+            let interval = setInterval(() => {
+                if (stepIndex < steps.length - 1) {
+                    nextStep();
+                } else {
+                    clearInterval(interval);
+                    autoSorting = false;
+                }
+            }, 500);
+        }
+        
+        function resetArray() {
+            stepIndex = 0;
+            autoSorting = false;
+            displayArray(originalArray);
+        }
+        
+        generateSteps();
+        displayArray(originalArray);
+    </script>
+</body>
+</html>
